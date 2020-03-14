@@ -27,7 +27,7 @@ logging.set_verbosity(logging.INFO)
 
 def download():
     if not os.path.exists(FLAGS.data_dir):
-        parent_dir = os.path.split(FLAGS.data_dir)[0:-1]
+        parent_dir = "/".join(os.path.split(FLAGS.data_dir)[0:-1])
         logging.info('Downloading the data to %s', parent_dir)
         os.system("wget --directory-prefix=%s http://files.grouplens.org/datasets/movielens/ml-20m.zip" % parent_dir)
         os.system('unzip %s -d %s' % (os.path.join(parent_dir, 'ml-20m.zip'), FLAGS.data_dir))
