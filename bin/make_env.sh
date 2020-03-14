@@ -7,4 +7,4 @@ module add cuda90
 conda activate cf
 conda install pandas
 pip install tensorflow==1.5
-
+pip install Bottleneck
