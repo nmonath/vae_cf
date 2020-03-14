@@ -156,7 +156,7 @@ def train():
 
     arch_str = "I-%s-I" % ('-'.join([str(d) for d in dae.dims[1:-1]]))
 
-    log_dir = '%s/log/ml-20m/DAE/{}'.format(exp_out_dir, arch_str)
+    log_dir = '%s/log/ml-20m/DAE/%s' % (exp_out_dir, arch_str)
 
     if os.path.exists(log_dir):
         shutil.rmtree(log_dir)
@@ -165,7 +165,7 @@ def train():
     summary_writer = tf.summary.FileWriter(log_dir, graph=tf.get_default_graph())
 
 
-    chkpt_dir = '%s/chkpt/ml-20m/DAE/{}'.format(exp_out_dir, arch_str)
+    chkpt_dir = '%s/chkpt/ml-20m/DAE/%s' % (exp_out_dir, arch_str)
 
     if not os.path.isdir(chkpt_dir):
         os.makedirs(chkpt_dir)

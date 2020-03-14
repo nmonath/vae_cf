@@ -166,7 +166,7 @@ def train():
 
 
 
-    log_dir = '%s/log/ml-20m/VAE_anneal{}K_cap{:1.1E}/{}'.format(exp_out_dir,
+    log_dir = '{}/log/ml-20m/VAE_anneal{}K_cap{:1.1E}/{}'.format(exp_out_dir,
         total_anneal_steps / 1000, anneal_cap, arch_str)
 
     if os.path.exists(log_dir):
@@ -175,7 +175,7 @@ def train():
     logging.info("log directory: %s" % log_dir)
     summary_writer = tf.summary.FileWriter(log_dir, graph=tf.get_default_graph())
 
-    chkpt_dir = '/%s/chkpt/ml-20m/VAE_anneal{}K_cap{:1.1E}/{}'.format(exp_out_dir,
+    chkpt_dir = '{}/chkpt/ml-20m/VAE_anneal{}K_cap{:1.1E}/{}'.format(exp_out_dir,
         total_anneal_steps / 1000, anneal_cap, arch_str)
 
     if not os.path.isdir(chkpt_dir):
