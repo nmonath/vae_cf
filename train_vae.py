@@ -29,6 +29,7 @@ def train():
         ts = FLAGS.timestamp
 
     exp_out_dir = os.path.join(FLAGS.exp_dir, ts)
+    os.makedirs(exp_out_dir, exist_ok=True)
 
     pro_dir = os.path.join(FLAGS.data_dir, 'pro_sg')
 
