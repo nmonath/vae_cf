@@ -30,7 +30,7 @@ def download():
         parent_dir = "/".join(os.path.split(FLAGS.data_dir)[0:-1])
         logging.info('Downloading the data to %s', parent_dir)
         os.system("wget --directory-prefix=%s http://files.grouplens.org/datasets/movielens/ml-20m.zip" % parent_dir)
-        os.system('unzip %s -d %s' % (os.path.join(parent_dir, 'ml-20m.zip'), FLAGS.data_dir))
+        os.system('unzip %s -d %s' % (os.path.join(parent_dir, 'ml-20m.zip'), parent_dir))
     else:
         logging.info('Data already exists! %s', FLAGS.data_dir)
 
