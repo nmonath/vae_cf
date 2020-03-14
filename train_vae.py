@@ -14,7 +14,7 @@ from scipy import sparse
 from model import MultiVAE
 
 FLAGS = flags.FLAGS
-flags.DEFINE_string('data_dir', 'data', 'data dir')
+flags.DEFINE_string('data_dir', 'data/ml-20m', 'data dir')
 flags.DEFINE_string('exp_dir', 'exp_out', 'experiment output dir')
 flags.DEFINE_string('timestamp', None, 'timestamp')
 
