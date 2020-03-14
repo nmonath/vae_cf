@@ -9,7 +9,9 @@ from absl import logging
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('data_dir', 'data', 'Where to store the data.')
+flags.DEFINE_string('data_dir', 'data/ml-20m', 'Where to store the data.')
+
+logging.set_verbosity(logging.INFO)
 
 # ## Data preprocessing
 
