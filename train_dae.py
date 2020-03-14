@@ -84,14 +84,14 @@ def train():
 
     # Set up training hyperparameters
     N = train_data.shape[0]
-    idxlist = range(N)
+    idxlist = [x for x in range(N)]
 
     # training batch size
     batch_size = 500
     batches_per_epoch = int(np.ceil(float(N) / batch_size))
 
     N_vad = vad_data_tr.shape[0]
-    idxlist_vad = range(N_vad)
+    idxlist_vad = [x for x in range(N_vad)]
 
     # validation batch size (since the entire validation set might not fit into GPU memory)
     batch_size_vad = 2000
@@ -238,7 +238,7 @@ def train():
         os.path.join(pro_dir, 'test_te.csv'))
 
     N_test = test_data_tr.shape[0]
-    idxlist_test = range(N_test)
+    idxlist_test = [x for x in range(N_test)]
     batch_size_test = 2000
 
     tf.reset_default_graph()
