@@ -32,4 +32,4 @@ sbatch -J $job_name \
             --nodes=1 \
             --mem=$mem \
             --time=0-04:00 \
-            bin/run_process.sh
+            bin/run_preprocess.sh
