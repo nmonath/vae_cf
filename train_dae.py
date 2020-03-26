@@ -176,13 +176,14 @@ def train():
 
     ndcgs_vad = []
 
-    with tf.Session() as sess:
+    with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
         init = tf.global_variables_initializer()
         sess.run(init)
 
         best_ndcg = -np.inf
 
         for epoch in range(n_epochs):
+            logging.info('[train] epoch %s', epoch)
             np.random.shuffle(idxlist)
             # train for one epoch
             for bnum, st_idx in enumerate(range(0, N, batch_size)):
@@ -251,7 +252,7 @@ def train():
 
     n100_list, r20_list, r50_list = [], [], []
 
-    with tf.Session() as sess:
+    with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
         saver.restore(sess, '{}/model'.format(chkpt_dir))
 
         for bnum, st_idx in enumerate(range(0, N_test, batch_size_test)):
