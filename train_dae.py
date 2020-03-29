@@ -27,7 +27,6 @@ logging.set_verbosity(logging.INFO)
 # The generative function is a [200 -> n_items] MLP, thus the overall architecture for the Multi-DAE is [n_items -> 200 -> n_items]. We find this architecture achieves better validation NDCG@100 than the [n_items -> 600 -> 200 -> 600 -> n_items] architecture as used in Multi-VAE^{PR}.
 
 def train():
-    logging.info("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
     if FLAGS.timestamp is None:
         now = datetime.datetime.now()
@@ -180,58 +179,59 @@ def train():
 
     ndcgs_vad = []
 
-    with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
-        init = tf.global_variables_initializer()
-        sess.run(init)
+    with tf.device("/gpu:0"):
+        with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
+            init = tf.global_variables_initializer()
+            sess.run(init)
 
-        best_ndcg = -np.inf
+            best_ndcg = -np.inf
 
-        for epoch in range(n_epochs):
-            logging.info('[train] epoch %s', epoch)
-            np.random.shuffle(idxlist)
-            # train for one epoch
-            for bnum, st_idx in enumerate(range(0, N, batch_size)):
-                end_idx = min(st_idx + batch_size, N)
-                X = train_data[idxlist[st_idx:end_idx]]
+            for epoch in range(n_epochs):
+                logging.info('[train] epoch %s', epoch)
+                np.random.shuffle(idxlist)
+                # train for one epoch
+                for bnum, st_idx in enumerate(range(0, N, batch_size)):
+                    end_idx = min(st_idx + batch_size, N)
+                    X = train_data[idxlist[st_idx:end_idx]]
 
-                if sparse.isspmatrix(X):
-                    X = X.toarray()
-                X = X.astype('float32')
+                    if sparse.isspmatrix(X):
+                        X = X.toarray()
+                    X = X.astype('float32')
 
-                feed_dict = {dae.input_ph: X,
-                             dae.keep_prob_ph: 0.5}
-                sess.run(train_op_var, feed_dict=feed_dict)
+                    feed_dict = {dae.input_ph: X,
+                                 dae.keep_prob_ph: 0.5}
+                    sess.run(train_op_var, feed_dict=feed_dict)
 
-                if bnum % 100 == 0:
-                    summary_train = sess.run(merged_var, feed_dict=feed_dict)
-                    summary_writer.add_summary(summary_train, global_step=epoch * batches_per_epoch + bnum)
+                    if bnum % 100 == 0:
+                        summary_train = sess.run(merged_var, feed_dict=feed_dict)
+                        summary_writer.add_summary(summary_train, global_step=epoch * batches_per_epoch + bnum)
 
-                    # compute validation NDCG
-            ndcg_dist = []
-            for bnum, st_idx in enumerate(range(0, N_vad, batch_size_vad)):
-                end_idx = min(st_idx + batch_size_vad, N_vad)
-                X = vad_data_tr[idxlist_vad[st_idx:end_idx]]
+                        # compute validation NDCG
+                ndcg_dist = []
+                for bnum, st_idx in enumerate(range(0, N_vad, batch_size_vad)):
+                    end_idx = min(st_idx + batch_size_vad, N_vad)
+                    X = vad_data_tr[idxlist_vad[st_idx:end_idx]]
 
-                if sparse.isspmatrix(X):
-                    X = X.toarray()
-                X = X.astype('float32')
+                    if sparse.isspmatrix(X):
+                        X = X.toarray()
+                    X = X.astype('float32')
 
-                pred_val = sess.run(logits_var, feed_dict={dae.input_ph: X})
-                # exclude examples from training and validation (if any)
-                pred_val[X.nonzero()] = -np.inf
-                ndcg_dist.append(NDCG_binary_at_k_batch(pred_val, vad_data_te[idxlist_vad[st_idx:end_idx]]))
+                    pred_val = sess.run(logits_var, feed_dict={dae.input_ph: X})
+                    # exclude examples from training and validation (if any)
+                    pred_val[X.nonzero()] = -np.inf
+                    ndcg_dist.append(NDCG_binary_at_k_batch(pred_val, vad_data_te[idxlist_vad[st_idx:end_idx]]))
 
-            ndcg_dist = np.concatenate(ndcg_dist)
-            ndcg_ = ndcg_dist.mean()
-            ndcgs_vad.append(ndcg_)
-            merged_valid_val = sess.run(merged_valid, feed_dict={ndcg_var: ndcg_, ndcg_dist_var: ndcg_dist})
-            summary_writer.add_summary(merged_valid_val, epoch)
+                ndcg_dist = np.concatenate(ndcg_dist)
+                ndcg_ = ndcg_dist.mean()
+                ndcgs_vad.append(ndcg_)
+                merged_valid_val = sess.run(merged_valid, feed_dict={ndcg_var: ndcg_, ndcg_dist_var: ndcg_dist})
+                summary_writer.add_summary(merged_valid_val, epoch)
 
-            # update the best model (if necessary)
-            if ndcg_ > best_ndcg:
-                logging.info('[validation] epoch %s new best ndcg %s > %s', epoch, ndcg_, best_ndcg)
-                saver.save(sess, '{}/model'.format(chkpt_dir))
-                best_ndcg = ndcg_
+                # update the best model (if necessary)
+                if ndcg_ > best_ndcg:
+                    logging.info('[validation] epoch %s new best ndcg %s > %s', epoch, ndcg_, best_ndcg)
+                    saver.save(sess, '{}/model'.format(chkpt_dir))
+                    best_ndcg = ndcg_
 
 
     # ### Compute test metrics
@@ -255,24 +255,24 @@ def train():
     logging.info("chkpt directory: %s" % chkpt_dir)
 
     n100_list, r20_list, r50_list = [], [], []
+    with tf.device("/gpu:0"):
+        with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
+            saver.restore(sess, '{}/model'.format(chkpt_dir))
 
-    with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
-        saver.restore(sess, '{}/model'.format(chkpt_dir))
+            for bnum, st_idx in enumerate(range(0, N_test, batch_size_test)):
+                end_idx = min(st_idx + batch_size_test, N_test)
+                X = test_data_tr[idxlist_test[st_idx:end_idx]]
 
-        for bnum, st_idx in enumerate(range(0, N_test, batch_size_test)):
-            end_idx = min(st_idx + batch_size_test, N_test)
-            X = test_data_tr[idxlist_test[st_idx:end_idx]]
+                if sparse.isspmatrix(X):
+                    X = X.toarray()
+                X = X.astype('float32')
 
-            if sparse.isspmatrix(X):
-                X = X.toarray()
-            X = X.astype('float32')
-
-            pred_val = sess.run(logits_var, feed_dict={dae.input_ph: X})
-            # exclude examples from training and validation (if any)
-            pred_val[X.nonzero()] = -np.inf
-            n100_list.append(NDCG_binary_at_k_batch(pred_val, test_data_te[idxlist_test[st_idx:end_idx]], k=100))
-            r20_list.append(Recall_at_k_batch(pred_val, test_data_te[idxlist_test[st_idx:end_idx]], k=20))
-            r50_list.append(Recall_at_k_batch(pred_val, test_data_te[idxlist_test[st_idx:end_idx]], k=50))
+                pred_val = sess.run(logits_var, feed_dict={dae.input_ph: X})
+                # exclude examples from training and validation (if any)
+                pred_val[X.nonzero()] = -np.inf
+                n100_list.append(NDCG_binary_at_k_batch(pred_val, test_data_te[idxlist_test[st_idx:end_idx]], k=100))
+                r20_list.append(Recall_at_k_batch(pred_val, test_data_te[idxlist_test[st_idx:end_idx]], k=20))
+                r50_list.append(Recall_at_k_batch(pred_val, test_data_te[idxlist_test[st_idx:end_idx]], k=50))
 
     n100_list = np.concatenate(n100_list)
     r20_list = np.concatenate(r20_list)
