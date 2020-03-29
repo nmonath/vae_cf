@@ -251,7 +251,7 @@ def train():
     saver, logits_var, _, _, _ = dae.build_graph()
 
     # Load the best performing model on the validation set
-    chkpt_dir = '%s/chkpt/ml-20m/DAE/{}'.format(exp_out_dir, arch_str)
+    chkpt_dir = '{}/chkpt/ml-20m/DAE/{}'.format(exp_out_dir, arch_str)
     logging.info("chkpt directory: %s" % chkpt_dir)
 
     n100_list, r20_list, r50_list = [], [], []

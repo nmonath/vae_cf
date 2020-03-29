@@ -278,7 +278,7 @@ def train():
 
     # Load the best performing model on the validation set
 
-    chkpt_dir = '%s/chkpt/ml-20m/VAE_anneal{}K_cap{:1.1E}/{}'.format(exp_out_dir,
+    chkpt_dir = '{}/chkpt/ml-20m/VAE_anneal{}K_cap{:1.1E}/{}'.format(exp_out_dir,
         total_anneal_steps / 1000, anneal_cap, arch_str)
     logging.info("[test] chkpt directory: %s" % chkpt_dir)
 
