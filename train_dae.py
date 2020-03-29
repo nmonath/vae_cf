@@ -27,6 +27,7 @@ logging.set_verbosity(logging.INFO)
 # The generative function is a [200 -> n_items] MLP, thus the overall architecture for the Multi-DAE is [n_items -> 200 -> n_items]. We find this architecture achieves better validation NDCG@100 than the [n_items -> 600 -> 200 -> 600 -> n_items] architecture as used in Multi-VAE^{PR}.
 
 def train():
+    logging.info("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
     if FLAGS.timestamp is None:
         now = datetime.datetime.now()
