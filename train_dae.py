@@ -17,6 +17,9 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('data_dir', 'data/ml-20m', 'data dir')
 flags.DEFINE_string('exp_dir', 'exp_out', 'experiment output dir')
 flags.DEFINE_string('timestamp', None, 'timestamp')
+flags.DEFINE_integer('n_epochs', 20, 'timestamp')
+
+logging.set_verbosity(logging.INFO)
 
 
 # ### Train a Multi-DAE
@@ -172,7 +175,7 @@ def train():
 
     logging.info("chkpt directory: %s" % chkpt_dir)
 
-    n_epochs = 200
+    n_epochs = FLAGS.n_epochs
 
     ndcgs_vad = []
 
