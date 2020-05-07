@@ -281,7 +281,7 @@ class MultiVAESF(MultiVAE):
         # p_dims[-1] says the number of items.
 
 
-        for i, (d_in, d_out) in enumerate(zip(self.p_dims[:-1], self.p_dims[1:-3])):
+        for i, (d_in, d_out) in enumerate(zip(self.p_dims[:-1], self.p_dims[1:-2])):
             weight_key = "weight_p_{}to{}".format(i, i + 1)
             bias_key = "bias_p_{}".format(i + 1)
             self.weights_p.append(tf.get_variable(
