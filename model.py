@@ -216,6 +216,91 @@ class MultiVAE(MultiDAE):
             tf.summary.histogram(bias_key, self.biases_p[-1])
 
 
+# Last layer of this is
+#  We give the user a softmax over K hidden clusters.
+#  We say that the items are associated with these clusters
+#
+
+class MultiVAESF(MultiVAE):
+
+    def p_graph(self, z):
+        h = z
+
+        for i, (w, b) in enumerate(zip(self.weights_p, self.biases_p)):
+            h = tf.matmul(h, w) + b
+
+            if i != len(self.weights_p) - 1:
+                h = tf.nn.tanh(h)
+            else:
+                h = tf.nn.softmax(h)
+
+        # h is distribution over clusters
+
+        item_cluster_affinity = tf.matmul(self.item_cluster_emb, self.item_emb)
+        h = tf.matmul(h, item_cluster_affinity)
+        return h
+
+    def _construct_weights(self):
+        self.weights_q, self.biases_q = [], []
+
+        for i, (d_in, d_out) in enumerate(zip(self.q_dims[:-1], self.q_dims[1:])):
+            if i == len(self.q_dims[:-1]) - 1:
+                # we need two sets of parameters for mean and variance,
+                # respectively
+                d_out *= 2
+            weight_key = "weight_q_{}to{}".format(i, i + 1)
+            bias_key = "bias_q_{}".format(i + 1)
+
+            self.weights_q.append(tf.get_variable(
+                name=weight_key, shape=[d_in, d_out],
+                initializer=tf.contrib.layers.xavier_initializer(
+                    seed=self.random_seed)))
+
+            self.biases_q.append(tf.get_variable(
+                name=bias_key, shape=[d_out],
+                initializer=tf.truncated_normal_initializer(
+                    stddev=0.001, seed=self.random_seed)))
+
+            # add summary stats
+            tf.summary.histogram(weight_key, self.weights_q[-1])
+            tf.summary.histogram(bias_key, self.biases_q[-1])
+
+        self.weights_p, self.biases_p = [], []
+        self.item_emb = tf.get_variable(
+                name='item_emb', shape=[self.p_dims[-2], self.p_dims[-1]],
+                initializer=tf.contrib.layers.xavier_initializer(
+                    seed=self.random_seed))
+        self.item_cluster_emb = tf.get_variable(
+                name='item_clust_emb', shape=[self.p_dims[-3], self.p_dims[-2]],
+                initializer=tf.contrib.layers.xavier_initializer(
+                    seed=self.random_seed))
+        tf.summary.histogram('item_clust_emb', self.item_cluster_emb)
+        tf.summary.histogram('item_emb', self.item_emb)
+        # p_dims[-3] says the number of clusters.
+        # p_dims[-2] says dim of clusters.
+        # p_dims[-1] says the number of items.
+
+
+        for i, (d_in, d_out) in enumerate(zip(self.p_dims[:-1], self.p_dims[1:-3])):
+            weight_key = "weight_p_{}to{}".format(i, i + 1)
+            bias_key = "bias_p_{}".format(i + 1)
+            self.weights_p.append(tf.get_variable(
+                name=weight_key, shape=[d_in, d_out],
+                initializer=tf.contrib.layers.xavier_initializer(
+                    seed=self.random_seed)))
+
+            self.biases_p.append(tf.get_variable(
+                name=bias_key, shape=[d_out],
+                initializer=tf.truncated_normal_initializer(
+                    stddev=0.001, seed=self.random_seed)))
+
+            # add summary stats
+            tf.summary.histogram(weight_key, self.weights_p[-1])
+            tf.summary.histogram(bias_key, self.biases_p[-1])
+
+
+
+
 # ### Training/validation data, hyperparameters
 
 # Load the pre-processed training and validation data
