@@ -307,7 +307,7 @@ class MultiVAESF2(MultiVAE):
     def q_graph(self):
         mu_q, std_q, KL = None, None, None
 
-        h = self.input_ph,
+        h = self.input_ph
         h = tf.nn.dropout(h, self.keep_prob_ph)
 
         for i, (w, b) in enumerate(zip(self.weights_q, self.biases_q)):
