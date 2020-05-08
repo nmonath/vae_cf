@@ -11,7 +11,7 @@ from absl import flags
 from absl import logging
 from scipy import sparse
 
-from model import MultiVAESF
+from model import MultiVAESF2
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('data_dir', 'data/ml-20m', 'data dir')
@@ -147,12 +147,12 @@ def train():
 
     #         -3      -2        -1
     # 200 --> 600 --> 200 --> n_items
-    p_dims = [200, 600, 10000, 40, n_items]
+    p_dims = [200, 600, 5000, 40, n_items]
     logging.info('n_items %s', n_items)
-    q_dims = [n_items, 600, 200]
+    q_dims = [n_items, 40, 5000, 600, 200]
 
     tf.reset_default_graph()
-    vae = MultiVAESF(p_dims, q_dims, lam=0.0, random_seed=98765)
+    vae = MultiVAESF2(p_dims, q_dims, lam=0.0, random_seed=98765)
 
     saver, logits_var, loss_var, train_op_var, merged_var = vae.build_graph()
 
@@ -277,7 +277,7 @@ def train():
     batch_size_test = 2000
 
     tf.reset_default_graph()
-    vae = MultiVAESF(p_dims, q_dims, lam=0.0)
+    vae = MultiVAESF2(p_dims, q_dims, lam=0.0)
     saver, logits_var, _, _, _ = vae.build_graph()
 
     # Load the best performing model on the validation set

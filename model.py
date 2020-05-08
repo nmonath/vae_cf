@@ -301,6 +301,107 @@ class MultiVAESF(MultiVAE):
 
 
 
+class MultiVAESF2(MultiVAE):
+
+
+    def q_graph(self):
+        mu_q, std_q, KL = None, None, None
+
+        h = self.input_ph,
+        h = tf.nn.dropout(h, self.keep_prob_ph)
+
+        for i, (w, b) in enumerate(zip(self.weights_q, self.biases_q)):
+            h = tf.matmul(h, w) + b
+
+            if i == 0:
+                h = tf.nn.relu(h)
+            elif i != len(self.weights_q) - 1:
+                h = tf.nn.tanh(h)
+            else:
+                mu_q = h[:, :self.q_dims[-1]]
+                logvar_q = h[:, self.q_dims[-1]:]
+
+                std_q = tf.exp(0.5 * logvar_q)
+                KL = tf.reduce_mean(tf.reduce_sum(
+                    0.5 * (-logvar_q + tf.exp(logvar_q) + mu_q ** 2 - 1), axis=1))
+        return mu_q, std_q, KL
+
+    def p_graph(self, z):
+        h = z
+
+        for i, (w, b) in enumerate(zip(self.weights_p, self.biases_p)):
+            h = tf.matmul(h, w) + b
+
+            if i != len(self.weights_p) - 1:
+                h = tf.nn.tanh(h)
+            else:
+                # h = tf.nn.softmax(h, axis=1)
+                h = tf.nn.softmax(h, axis=1)
+
+        # h is distribution over clusters
+        # item_cluster_affinity = tf.nn.softmax(tf.matmul(self.item_emb, self.item_cluster_emb), axis=1)
+        item_cluster_affinity = tf.nn.relu(tf.matmul(self.item_emb, self.item_cluster_emb))
+        h = tf.matmul(h, item_cluster_affinity,transpose_b=True)
+        return h
+
+    def _construct_weights(self):
+        self.weights_q, self.biases_q = [], []
+
+        for i, (d_in, d_out) in enumerate(zip(self.q_dims[:-1], self.q_dims[1:])):
+            if i == len(self.q_dims[:-1]) - 1:
+                # we need two sets of parameters for mean and variance,
+                # respectively
+                d_out *= 2
+            weight_key = "weight_q_{}to{}".format(i, i + 1)
+            bias_key = "bias_q_{}".format(i + 1)
+
+            self.weights_q.append(tf.get_variable(
+                name=weight_key, shape=[d_in, d_out],
+                initializer=tf.contrib.layers.xavier_initializer(
+                    seed=self.random_seed)))
+
+            self.biases_q.append(tf.get_variable(
+                name=bias_key, shape=[d_out],
+                initializer=tf.truncated_normal_initializer(
+                    stddev=0.001, seed=self.random_seed)))
+
+            # add summary stats
+            tf.summary.histogram(weight_key, self.weights_q[-1])
+            tf.summary.histogram(bias_key, self.biases_q[-1])
+
+        self.weights_p, self.biases_p = [], []
+        self.item_emb = tf.get_variable(
+                name='item_emb', shape=[self.p_dims[-1],self.p_dims[-2]],
+                initializer=tf.contrib.layers.xavier_initializer(
+                    seed=self.random_seed))
+        self.item_cluster_emb = tf.get_variable(
+                name='item_clust_emb', shape=[self.p_dims[-2],self.p_dims[-3]],
+                initializer=tf.contrib.layers.xavier_initializer(
+                    seed=self.random_seed))
+        tf.summary.histogram('item_clust_emb', self.item_cluster_emb)
+        tf.summary.histogram('item_emb', self.item_emb)
+        # p_dims[-3] says the number of clusters.
+        # p_dims[-2] says dim of clusters.
+        # p_dims[-1] says the number of items.
+
+
+        for i, (d_in, d_out) in enumerate(zip(self.p_dims[:-1], self.p_dims[1:-2])):
+            weight_key = "weight_p_{}to{}".format(i, i + 1)
+            bias_key = "bias_p_{}".format(i + 1)
+            self.weights_p.append(tf.get_variable(
+                name=weight_key, shape=[d_in, d_out],
+                initializer=tf.contrib.layers.xavier_initializer(
+                    seed=self.random_seed)))
+
+            self.biases_p.append(tf.get_variable(
+                name=bias_key, shape=[d_out],
+                initializer=tf.truncated_normal_initializer(
+                    stddev=0.001, seed=self.random_seed)))
+
+            # add summary stats
+            tf.summary.histogram(weight_key, self.weights_p[-1])
+            tf.summary.histogram(bias_key, self.biases_p[-1])
+
 
 # ### Training/validation data, hyperparameters
 
