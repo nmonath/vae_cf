@@ -232,10 +232,12 @@ class MultiVAESF(MultiVAE):
             if i != len(self.weights_p) - 1:
                 h = tf.nn.tanh(h)
             else:
-                h = tf.nn.softmax(h,axis=1)
+                # h = tf.nn.softmax(h, axis=1)
+                h = tf.nn.softmax(h, axis=1)
 
         # h is distribution over clusters
-        item_cluster_affinity = tf.nn.softmax(tf.matmul(self.item_emb, self.item_cluster_emb),axis=1)
+        # item_cluster_affinity = tf.nn.softmax(tf.matmul(self.item_emb, self.item_cluster_emb), axis=1)
+        item_cluster_affinity = tf.nn.relu(tf.matmul(self.item_emb, self.item_cluster_emb))
         h = tf.matmul(h, item_cluster_affinity,transpose_b=True)
         return h
 
