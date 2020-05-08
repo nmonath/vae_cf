@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.contrib.layers import apply_regularization, l2_regularizer
-
+from tensorflow.contrib.sparsemax import sparsemax
 
 class MultiDAE(object):
     def __init__(self, p_dims, q_dims=None, lam=0.01, lr=1e-3, random_seed=None):
@@ -232,12 +232,11 @@ class MultiVAESF(MultiVAE):
             if i != len(self.weights_p) - 1:
                 h = tf.nn.tanh(h)
             else:
-                h = tf.nn.softmax(h)
+                h = sparsemax(h)
 
         # h is distribution over clusters
-
-        item_cluster_affinity = tf.matmul(self.item_cluster_emb, self.item_emb)
-        h = tf.matmul(h, item_cluster_affinity)
+        item_cluster_affinity = sparsemax(tf.matmul(self.item_emb, self.item_cluster_emb))
+        h = tf.matmul(h, item_cluster_affinity,transpose_b=True)
         return h
 
     def _construct_weights(self):
@@ -267,11 +266,11 @@ class MultiVAESF(MultiVAE):
 
         self.weights_p, self.biases_p = [], []
         self.item_emb = tf.get_variable(
-                name='item_emb', shape=[self.p_dims[-2], self.p_dims[-1]],
+                name='item_emb', shape=[self.p_dims[-1],self.p_dims[-2]],
                 initializer=tf.contrib.layers.xavier_initializer(
                     seed=self.random_seed))
         self.item_cluster_emb = tf.get_variable(
-                name='item_clust_emb', shape=[self.p_dims[-3], self.p_dims[-2]],
+                name='item_clust_emb', shape=[self.p_dims[-2],self.p_dims[-3]],
                 initializer=tf.contrib.layers.xavier_initializer(
                     seed=self.random_seed))
         tf.summary.histogram('item_clust_emb', self.item_cluster_emb)
