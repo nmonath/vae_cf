@@ -147,7 +147,7 @@ def train():
 
     #         -3      -2        -1
     # 200 --> 600 --> 200 --> n_items
-    p_dims = [200, 600, 5000, 200, n_items]
+    p_dims = [200, 600, 1000, 40, n_items]
     q_dims = [n_items, 600, 200]
 
     tf.reset_default_graph()
