@@ -147,8 +147,8 @@ def train():
 
     #         -3      -2        -1
     # 200 --> 600 --> 200 --> n_items
-    p_dims = [200, 10000, 200, n_items]
-    q_dims = [n_items, 10000, 200]
+    p_dims = [200, 5000, 200, n_items]
+    q_dims = [n_items, 5000, 200]
 
     tf.reset_default_graph()
     vae = MultiVAESF(p_dims, q_dims, lam=0.0, random_seed=98765)
