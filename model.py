@@ -314,6 +314,8 @@ class MultiVAESF2(MultiVAE):
             h = tf.matmul(h, w) + b
 
             if i == 0:
+                h = h
+            elif i == 1:
                 h = tf.nn.relu(h)
             elif i != len(self.weights_q) - 1:
                 h = tf.nn.tanh(h)
